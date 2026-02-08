@@ -8,6 +8,43 @@
 #include "LuaEnv.h"
 #include "ReflectionUtils/PropertyDesc.h"
 
+// ============================================================================
+// Property construction helpers for Angelscript engine fork.
+//
+// The Angelscript fork adds 'AngelscriptPropertyFlags' field to all
+// UECodeGen_Private::*PropertyParams structs, changing their layout.
+// Aggregate initialization no longer works, so we use field-by-field assignment.
+//
+// These helpers reduce code duplication across the 9 property types.
+// ============================================================================
+
+#if UNLUA_WITH_ANGELSCRIPT && UE_VERSION_NEWER_THAN(5, 4, 0)
+
+/**
+ * Initialize common fields shared by all UECodeGen_Private::*PropertyParams types.
+ * Zero-initializes the struct first, then sets the universal fields.
+ */
+template<typename ParamsType>
+void InitCommonPropertyParams(ParamsType& Params, EPropertyFlags PropertyFlags, UECodeGen_Private::EPropertyGenFlags GenFlags)
+{
+    Params = {};
+    Params.NameUTF8 = nullptr;
+    Params.RepNotifyFuncUTF8 = nullptr;
+    Params.PropertyFlags = PropertyFlags;
+    Params.Flags = GenFlags;
+    Params.ObjectFlags = RF_Transient;
+    Params.SetterFunc = nullptr;
+    Params.GetterFunc = nullptr;
+    Params.ArrayDim = 1;
+    Params.AngelscriptPropertyFlags = 0;
+#if WITH_METADATA
+    Params.NumMetaData = 0;
+    Params.MetaDataArray = nullptr;
+#endif
+}
+
+#endif // UNLUA_WITH_ANGELSCRIPT && UE_VERSION_NEWER_THAN(5, 4, 0)
+
 namespace UnLua
 {
     FPropertyRegistry::FPropertyRegistry(FLuaEnv* Env)
@@ -97,6 +134,13 @@ namespace UnLua
         {
 #if UE_VERSION_OLDER_THAN(5, 1, 0)
             const auto Property = new FBoolProperty(PropertyCollector, NAME_None, RF_Transient, 0, (EPropertyFlags)0, 0xFF, 1, true);
+#elif UNLUA_WITH_ANGELSCRIPT && UE_VERSION_NEWER_THAN(5, 4, 0)
+            UECodeGen_Private::FBoolPropertyParams Params;
+            InitCommonPropertyParams(Params, CPF_None, UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool);
+            Params.ElementSize = sizeof(bool);
+            Params.SizeOfOuter = sizeof(FPropertyCollector);
+            Params.SetBitFunc = nullptr;
+            const auto Property = new FBoolProperty(PropertyCollector, Params);
 #else
             constexpr auto Params = UECodeGen_Private::FBoolPropertyParams
             {
@@ -135,6 +179,11 @@ namespace UnLua
         {
 #if UE_VERSION_OLDER_THAN(5, 1, 0)
             const auto Property = new FIntProperty(PropertyCollector, NAME_None, RF_Transient, 0, CPF_HasGetValueTypeHash);
+#elif UNLUA_WITH_ANGELSCRIPT && UE_VERSION_NEWER_THAN(5, 4, 0)
+            UECodeGen_Private::FIntPropertyParams Params;
+            InitCommonPropertyParams(Params, CPF_HasGetValueTypeHash, UECodeGen_Private::EPropertyGenFlags::Int);
+            Params.Offset = 0;
+            const auto Property = new FIntProperty(PropertyCollector, Params);
 #else
             constexpr auto Params = UECodeGen_Private::FIntPropertyParams
             {
@@ -171,6 +220,11 @@ namespace UnLua
         {
 #if UE_VERSION_OLDER_THAN(5, 1, 0)
             const auto Property = new FFloatProperty(PropertyCollector, NAME_None, RF_Transient, 0, CPF_HasGetValueTypeHash);
+#elif UNLUA_WITH_ANGELSCRIPT && UE_VERSION_NEWER_THAN(5, 4, 0)
+            UECodeGen_Private::FFloatPropertyParams Params;
+            InitCommonPropertyParams(Params, CPF_HasGetValueTypeHash, UECodeGen_Private::EPropertyGenFlags::Float);
+            Params.Offset = 0;
+            const auto Property = new FFloatProperty(PropertyCollector, Params);
 #else
             constexpr auto Params = UECodeGen_Private::FFloatPropertyParams
             {
@@ -207,6 +261,11 @@ namespace UnLua
         {
 #if UE_VERSION_OLDER_THAN(5, 1, 0)
             const auto Property = new FStrProperty(PropertyCollector, NAME_None, RF_Transient, 0, CPF_HasGetValueTypeHash);
+#elif UNLUA_WITH_ANGELSCRIPT && UE_VERSION_NEWER_THAN(5, 4, 0)
+            UECodeGen_Private::FStrPropertyParams Params;
+            InitCommonPropertyParams(Params, CPF_HasGetValueTypeHash, UECodeGen_Private::EPropertyGenFlags::Str);
+            Params.Offset = 0;
+            const auto Property = new FStrProperty(PropertyCollector, Params);
 #else
             constexpr auto Params = UECodeGen_Private::FStrPropertyParams
             {
@@ -243,6 +302,11 @@ namespace UnLua
         {
 #if UE_VERSION_OLDER_THAN(5, 1, 0)
             const auto Property = new FNameProperty(PropertyCollector, NAME_None, RF_Transient, 0, CPF_HasGetValueTypeHash);
+#elif UNLUA_WITH_ANGELSCRIPT && UE_VERSION_NEWER_THAN(5, 4, 0)
+            UECodeGen_Private::FNamePropertyParams Params;
+            InitCommonPropertyParams(Params, CPF_HasGetValueTypeHash, UECodeGen_Private::EPropertyGenFlags::Name);
+            Params.Offset = 0;
+            const auto Property = new FNameProperty(PropertyCollector, Params);
 #else
             constexpr auto Params = UECodeGen_Private::FNamePropertyParams
             {
@@ -279,6 +343,8 @@ namespace UnLua
         {
 #if UE_VERSION_OLDER_THAN(5, 1, 0)
             const auto Property = new FTextProperty(PropertyCollector, NAME_None, RF_Transient, 0, CPF_HasGetValueTypeHash);
+#elif UE_VERSION_NEWER_THAN(5, 2, 1)
+            const auto Property = new FTextProperty(PropertyCollector, "", RF_Transient);
 #else
             constexpr auto Params = UECodeGen_Private::FTextPropertyParams
             {
@@ -292,21 +358,10 @@ namespace UnLua
 #endif
                 nullptr,
                 nullptr,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
-                1,
-#endif
                 0,
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
-                METADATA_PARAMS(0, nullptr)
-#else
                 METADATA_PARAMS(nullptr, 0)
-#endif
             };
-#if UE_VERSION_NEWER_THAN(5, 2, 1)
-            const auto Property = new FTextProperty(PropertyCollector, "", RF_Transient);
-#else
             const auto Property = new FTextProperty(PropertyCollector, Params);
-#endif
 #endif
             TextProperty = TSharedPtr<ITypeInterface>(FPropertyDesc::Create(Property));
         }
@@ -323,6 +378,14 @@ namespace UnLua
         {
 #if UE_VERSION_OLDER_THAN(5, 1, 0)
             Property = new FObjectProperty(PropertyCollector, NAME_None, RF_Transient, 0, CPF_HasGetValueTypeHash, Class);
+#elif UNLUA_WITH_ANGELSCRIPT && UE_VERSION_NEWER_THAN(5, 4, 0)
+            UECodeGen_Private::FObjectPropertyParams Params;
+            InitCommonPropertyParams(Params, CPF_HasGetValueTypeHash, UECodeGen_Private::EPropertyGenFlags::Object);
+            Params.Offset = 0;
+            Params.ClassFunc = nullptr;
+            const auto ObjectProperty = new FObjectProperty(PropertyCollector, Params);
+            ObjectProperty->PropertyClass = Class;
+            Property = ObjectProperty;
 #else
             constexpr auto Params = UECodeGen_Private::FObjectPropertyParams
             {
@@ -356,6 +419,19 @@ namespace UnLua
         {
 #if UE_VERSION_OLDER_THAN(5, 1, 0)
             Property = new FStructProperty(PropertyCollector, NAME_None, RF_Transient, 0, CPF_HasGetValueTypeHash, ScriptStruct);
+#elif UNLUA_WITH_ANGELSCRIPT && UE_VERSION_NEWER_THAN(5, 4, 0)
+            UECodeGen_Private::FStructPropertyParams Params;
+            InitCommonPropertyParams(Params,
+                ScriptStruct->GetCppStructOps()
+                    ? ScriptStruct->GetCppStructOps()->GetComputedPropertyFlags() | CPF_HasGetValueTypeHash
+                    : CPF_HasGetValueTypeHash,
+                UECodeGen_Private::EPropertyGenFlags::Struct);
+            Params.Offset = 0;
+            Params.ScriptStructFunc = nullptr;
+            const auto StructProperty = new FStructProperty(PropertyCollector, Params);
+            StructProperty->Struct = ScriptStruct;
+            StructProperty->ElementSize = ScriptStruct->PropertiesSize;
+            Property = StructProperty;
 #else
             const auto Params = UECodeGen_Private::FStructPropertyParams
             {
@@ -390,7 +466,14 @@ namespace UnLua
         }
         else if (const auto Enum = Cast<UEnum>(Field))
         {
+#if UE_VERSION_NEWER_THAN(5, 4, 0)
+            // UE5.5+ uses different constructor signature
+            const auto EnumProperty = new FEnumProperty(PropertyCollector, NAME_None, RF_Transient);
+            EnumProperty->SetEnum(Enum);
+            EnumProperty->PropertyFlags |= CPF_HasGetValueTypeHash;
+#else
             const auto EnumProperty = new FEnumProperty(PropertyCollector, NAME_None, RF_Transient, 0, CPF_HasGetValueTypeHash, Enum);
+#endif
             const auto UnderlyingProperty = new FByteProperty(EnumProperty, TEXT("UnderlyingType"), RF_Transient);
             Property = EnumProperty;
             Property->AddCppProperty(UnderlyingProperty);

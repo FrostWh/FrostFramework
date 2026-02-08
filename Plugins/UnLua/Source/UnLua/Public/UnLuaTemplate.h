@@ -18,6 +18,17 @@
 #include "Misc/EngineVersionComparison.h"
 #include <type_traits>
 
+// Compatibility layer for UE5.5+ where TChooseClass was removed from the engine.
+// TChooseClass is used throughout UnLua codebase.
+// Only define when the engine no longer provides it (UE5.5+) to avoid redefinition conflicts.
+#if UE_VERSION_NEWER_THAN(5, 4, 0)
+template<bool bCondition, typename TrueType, typename FalseType>
+struct TChooseClass
+{
+    using Result = typename std::conditional<bCondition, TrueType, FalseType>::type;
+};
+#endif
+
 namespace UnLua
 {
 

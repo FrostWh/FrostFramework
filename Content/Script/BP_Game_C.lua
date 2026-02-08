@@ -8,7 +8,7 @@ function M:ReceiveBeginPlay()
 	self.SpawnOrigin = UE.FVector(650.0, 0.0, 100.0)
 	self.SpawnLocation = UE.FVector()
 	self.AICharacterClass = UE.UClass.Load("/Game/Core/Blueprints/AI/BP_AICharacter.BP_AICharacter_C")
-	UE.UKismetSystemLibrary.K2_SetTimerDelegate({self, M.SpawnEnemy}, self.EnemySpawnInterval, true)
+	UE.UKismetSystemLibrary.K2_SetTimerDelegate({self, M.SpawnEnemy}, self.EnemySpawnInterval, true, false, 0.0, 0.0)
 end
 
 function M:SpawnEnemy()
@@ -18,7 +18,7 @@ function M:SpawnEnemy()
 		self.SpawnLocation.Z = self.SpawnLocation.Z + 100
 		local Target = PlayerCharacter:K2_GetActorLocation()
 		local SpawnRotation = UE.UKismetMathLibrary.FindLookAtRotation(self.SpawnLocation, Target)
-		UE.UAIBlueprintHelperLibrary.SpawnAIFromClass(self, self.AICharacterClass, nil, self.SpawnLocation, SpawnRotation)
+		UE.UAIBlueprintHelperLibrary.SpawnAIFromClass(self, self.AICharacterClass, nil, self.SpawnLocation, SpawnRotation, false)
 		self.AliveEnemies = self.AliveEnemies + 1
 		if self.AliveEnemies > self.MaxEnemies then
 			self.AliveEnemies = self.MaxEnemies

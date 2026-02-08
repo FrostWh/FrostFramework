@@ -11,6 +11,13 @@
 #include <limits.h>
 #include <stddef.h>
 
+/*
+** UnLua modification: Rename TString to avoid conflict with UE5.5+ TString template alias.
+** UE5.5 introduced 'using TString = ...' in ContainersFwd.h which conflicts with Lua's 
+** 'typedef struct TString'.
+*/
+#define TString Lua_TString
+
 
 /*
 ** ===================================================================

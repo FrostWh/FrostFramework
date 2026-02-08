@@ -440,7 +440,7 @@ namespace UnLua
         const int Actual = lua_gettop(L); 
         if (Actual < Expected)
         {
-            UE_LOG(LogUnLua, Warning, TEXT("Attempted to call constructor of %s with invalid arguments. %d expected but got %d."), *TType<ClassType>::GetName(), Expected, Actual);
+            UE_LOG(LogUnLua, Warning, TEXT("Attempted to call constructor of %s with invalid arguments. %d expected but got %d."), ANSI_TO_TCHAR(TType<ClassType>::GetName()), Expected, Actual);
             return 0;
         }
 
@@ -1030,7 +1030,7 @@ namespace UnLua
     void TExportedClass<bIsReflected, ClassType, CtorArgType...>::AddDefaultFunctions(FFalse NotReflected)
     {
         AddConstructor(typename TChooseClass<TIsConstructible<ClassType, CtorArgType...>::Value, FTrue, FFalse>::Result());
-        AddDestructor(typename TChooseClass<TAnd<TIsDestructible<ClassType>, TNot<TIsTriviallyDestructible<ClassType>>>::Value, FFalse, FTrue>::Result());
+        AddDestructor(typename TChooseClass<TIsDestructible<ClassType>::Value && !std::is_trivially_destructible<ClassType>::value, FFalse, FTrue>::Result());
     }
 
     template <bool bIsReflected, typename ClassType, typename... CtorArgType>

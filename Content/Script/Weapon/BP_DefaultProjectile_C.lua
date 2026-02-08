@@ -14,7 +14,7 @@ end
 
 function M:ReceiveBeginPlay()
 	self.Super.ReceiveBeginPlay(self)
-	local MID = self.StaticMesh:CreateDynamicMaterialInstance(0)
+	local MID = self.StaticMesh:CreateDynamicMaterialInstance(0, nil, "")
 	if MID then
 		MID:SetVectorParameterValue("BaseColor", self.BaseColor)
 	end

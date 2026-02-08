@@ -15,6 +15,7 @@
 #include "Engine/World.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "Misc/EngineVersionComparison.h"
 #include "LuaEnv.h"
 #include "Binding.h"
 #include "LowLevel.h"
@@ -29,11 +30,17 @@
 #include "UnLuaLegacy.h"
 #include "UnLuaLib.h"
 #include "UnLuaSettings.h"
-#include "lstate.h"
+
+#include "LuaInternalHeaders.h"
 
 namespace UnLua
 {
+#if UE_VERSION_NEWER_THAN(5, 4, 0)
+    // UE5.5+ split AsyncLoading into AsyncLoadingPhase1 and AsyncLoadingPhase2
+    constexpr EInternalObjectFlags AsyncObjectFlags = EInternalObjectFlags::AsyncLoadingPhase1 | EInternalObjectFlags::AsyncLoadingPhase2 | EInternalObjectFlags::Async;
+#else
     constexpr EInternalObjectFlags AsyncObjectFlags = EInternalObjectFlags::AsyncLoading | EInternalObjectFlags::Async;
+#endif
 
     TMap<lua_State*, FLuaEnv*> FLuaEnv::AllEnvs;
     FLuaEnv::FOnCreated FLuaEnv::OnCreated;

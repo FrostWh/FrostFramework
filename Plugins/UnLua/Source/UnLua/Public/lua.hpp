@@ -29,3 +29,11 @@ extern "C" {
 }
 #endif
 #endif
+
+// Undefine Lua's TString macro after including Lua headers to prevent conflicts with UE5.5+ TString template alias.
+// The macro is defined in luaconf.h to rename Lua's internal TString struct to Lua_TString.
+// Files that directly include Lua internal headers (lobject.h, lstate.h, etc.) must re-define this macro
+// before including those headers.
+#ifdef TString
+#undef TString
+#endif

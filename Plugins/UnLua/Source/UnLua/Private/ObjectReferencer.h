@@ -16,6 +16,7 @@
 
 #include "Containers/Set.h"
 #include "UObject/GCObject.h"
+#include "Misc/EngineVersionComparison.h"
 
 namespace UnLua
 {
@@ -49,7 +50,14 @@ namespace UnLua
 
         virtual void AddReferencedObjects(FReferenceCollector& Collector) override
         {
+#if UE_VERSION_NEWER_THAN(5, 4, 0)
+            for (TObjectPtr<UObject>& Object : ReferencedObjects)
+            {
+                Collector.AddReferencedObject(Object);
+            }
+#else
             Collector.AddReferencedObjects(ReferencedObjects);
+#endif
         }
 
         virtual FString GetReferencerName() const override
@@ -58,7 +66,11 @@ namespace UnLua
         }
 
     private:
+#if UE_VERSION_NEWER_THAN(5, 4, 0)
+        TSet<TObjectPtr<UObject>> ReferencedObjects;
+#else
         TSet<UObject*> ReferencedObjects;
+#endif
         FString Name = TEXT("FObjectReferencer");
     };
 }

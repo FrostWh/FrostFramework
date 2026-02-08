@@ -13,7 +13,7 @@ end
 function M:ReceiveBeginPlay()
 	if self:IsLocalPlayerController() then
 		local Widget = UE.UWidgetBlueprintLibrary.Create(self, UE.UClass.Load("/Game/Core/UI/UMG_Main.UMG_Main_C"))
-		Widget:AddToViewport()
+		Widget:AddToViewport(0)
 	end
 
 	self.Overridden.ReceiveBeginPlay(self)
@@ -44,7 +44,7 @@ function M:MoveForward(AxisValue)
 		local Rotation = self:GetControlRotation(self.ControlRot)
 		Rotation:Set(0, Rotation.Yaw, 0)
 		local Direction = Rotation:ToVector(self.ForwardVec)		-- Rotation:GetForwardVector()
-		self.Pawn:AddMovementInput(Direction, AxisValue)
+		self.Pawn:AddMovementInput(Direction, AxisValue, false)
 	end
 end
 
@@ -53,7 +53,7 @@ function M:MoveRight(AxisValue)
 		local Rotation = self:GetControlRotation(self.ControlRot)
 		Rotation:Set(0, Rotation.Yaw, 0)
 		local Direction = Rotation:GetRightVector(self.RightVec)
-		self.Pawn:AddMovementInput(Direction, AxisValue)
+		self.Pawn:AddMovementInput(Direction, AxisValue, false)
 	end
 end
 

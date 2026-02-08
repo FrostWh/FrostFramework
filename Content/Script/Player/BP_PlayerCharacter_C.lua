@@ -31,7 +31,7 @@ end
 function M:ReceiveBeginPlay()
 	self.Super.ReceiveBeginPlay(self)
 	self.DefaultFOV = self.Camera.FieldOfView
-	self.TimerHandle = UE.UKismetSystemLibrary.K2_SetTimerDelegate({self, M.FallCheck}, 1.0, true)
+	self.TimerHandle = UE.UKismetSystemLibrary.K2_SetTimerDelegate({self, M.FallCheck}, 1.0, true, false, 0.0, 0.0)
 	local InterpFloats = self.ZoomInOut.TheTimeline.InterpFloats
 	local FloatTrack = InterpFloats:GetRef(1)
 	FloatTrack.InterpFunc:Bind(self, M.OnZoomInOutUpdate)

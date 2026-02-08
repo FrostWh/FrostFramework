@@ -11,7 +11,7 @@ end
 
 function M:ReceiveBeginPlay()
     self.Counter = 0
-    self.PlaneMaterial = self.Plane:CreateDynamicMaterialInstance(0)
+    self.PlaneMaterial = self.Plane:CreateDynamicMaterialInstance(0, nil, "")
     update(self)
 end
 

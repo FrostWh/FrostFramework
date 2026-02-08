@@ -22,7 +22,7 @@ end
 function M:StartFire()
 	self.IsFiring = true
 	self:FireAmmunition()
-	self.TimerHandle = UE.UKismetSystemLibrary.K2_SetTimerDelegate({self, M.Refire}, self.FireInterval, true)
+	self.TimerHandle = UE.UKismetSystemLibrary.K2_SetTimerDelegate({self, M.Refire}, self.FireInterval, true, false, 0.0, 0.0)
 end
 
 function M:StopFire()
@@ -76,7 +76,7 @@ function M:InstantFire()
 	End.Add(Start)
 	--local HitResult = UE.FHitResult()
 	--local ActorsToIgnore = TArray(AActor)
-	local bResult = UE.UKismetSystemLibrary.LineTraceSingle(self, Start, End, UE.ETraceTypeQuery.Weapon, false, nil, UE.EDrawDebugTrace.None, nil, true)
+	local bResult = UE.UKismetSystemLibrary.LineTraceSingle(self, Start, End, UE.ETraceTypeQuery.Weapon, false, nil, UE.EDrawDebugTrace.None, nil, true, UE.FLinearColor(1, 0, 0, 1), UE.FLinearColor(0, 1, 0, 1), 5.0)
 	if bResult then
 		-- todo:
 	end
@@ -89,7 +89,7 @@ function M:GetFireInfo()
 	local TraceEnd = TraceStart + Delta
 	local HitResult = UE.FHitResult()
 	--local ActorsToIgnore = TArray(AActor)
-	local bResult = UE.UKismetSystemLibrary.LineTraceSingle(self, TraceStart, TraceEnd, UE.ETraceTypeQuery.Weapon, false, nil, UE.EDrawDebugTrace.None, HitResult, true)
+	local bResult = UE.UKismetSystemLibrary.LineTraceSingle(self, TraceStart, TraceEnd, UE.ETraceTypeQuery.Weapon, false, nil, UE.EDrawDebugTrace.None, HitResult, true, UE.FLinearColor(1, 0, 0, 1), UE.FLinearColor(0, 1, 0, 1), 5.0)
 	local Translation = self.SkeletalMesh:GetSocketLocation(self.MuzzleSocketName)
 	local Rotation
 	if bResult then

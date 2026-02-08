@@ -16,30 +16,32 @@
 
 #include "CoreUObject.h"
 #include "UnLuaBase.h"
+#include "Misc/EngineVersionComparison.h"
+#include "Misc/CString.h"
+
+// Declaration only - implementation is in UnLuaPrivate.cpp to avoid lua header conflicts
+UNLUA_API void UnLuaLogWithTraceback(lua_State* L, ELogVerbosity::Type Verbosity, const FString& LogMsg);
+
+// Helper to format string without compile-time format string validation (for UE5.5+ compatibility)
+// Uses FCString::GetVarArgs which doesn't have consteval format string checking
+inline FString UnLuaUnsafePrintf(const TCHAR* Fmt, ...)
+{
+    TCHAR Buffer[4096];
+    va_list ArgPtr;
+    va_start(ArgPtr, Fmt);
+    int32 Result = FCString::GetVarArgs(Buffer, UE_ARRAY_COUNT(Buffer), Fmt, ArgPtr);
+    va_end(ArgPtr);
+    return FString(Buffer);
+}
 
 #define UNLUA_LOG(L, CategoryName, Verbosity, Format, ...) \
-    {\
-    	FString LogMsg = FString::Printf(Format, ##__VA_ARGS__);\
-        luaL_traceback(L, L, "", 0); \
-        UE_LOG(LogUnLua, Log, TEXT("%s%s"),*LogMsg,UTF8_TO_TCHAR(lua_tostring(L,-1))); \
-        lua_pop(L,1); \
-    }
+    UnLuaLogWithTraceback(L, ELogVerbosity::Log, UnLuaUnsafePrintf(Format, ##__VA_ARGS__))
 
 #define UNLUA_LOGWARNING(L, CategoryName, Verbosity, Format, ...) \
-    {\
-    	FString LogMsg = FString::Printf(Format, ##__VA_ARGS__);\
-        luaL_traceback(L, L, "", 0); \
-        UE_LOG(LogUnLua, Warning, TEXT("%s%s"),*LogMsg,UTF8_TO_TCHAR(lua_tostring(L,-1))); \
-        lua_pop(L,1); \
-    }
+    UnLuaLogWithTraceback(L, ELogVerbosity::Warning, UnLuaUnsafePrintf(Format, ##__VA_ARGS__))
 
 #define UNLUA_LOGERROR(L, CategoryName, Verbosity, Format, ...) \
-    {\
-    	FString LogMsg = FString::Printf(Format, ##__VA_ARGS__);\
-        luaL_traceback(L, L, "", 0); \
-        UE_LOG(LogUnLua, Error, TEXT("%s%s"),*LogMsg,UTF8_TO_TCHAR(lua_tostring(L,-1))); \
-        lua_pop(L,1); \
-    }
+    UnLuaLogWithTraceback(L, ELogVerbosity::Error, UnLuaUnsafePrintf(Format, ##__VA_ARGS__))
 
 #if STATS
 DECLARE_STATS_GROUP(TEXT("UnLua"), STATGROUP_UnLua, STATCAT_Advanced);

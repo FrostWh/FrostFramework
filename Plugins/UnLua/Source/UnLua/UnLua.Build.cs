@@ -112,6 +112,14 @@ public class UnLua : ModuleRules
 
         if (IsPluginEnabled("LuaCompat"))
             PublicIncludePaths.Add(Path.Combine(PluginDirectory, "Source/ThirdParty/Lua/lua-compat-5.3/c-api"));
+
+        // Detect Angelscript engine fork.
+        // The Angelscript fork adds AngelscriptPropertyFlags to UECodeGen_Private property params structs,
+        // which changes the struct layout and requires different property construction code.
+        if (IsPluginEnabled("Angelscript"))
+            PublicDefinitions.Add("UNLUA_WITH_ANGELSCRIPT=1");
+        else
+            PublicDefinitions.Add("UNLUA_WITH_ANGELSCRIPT=0");
     }
 
     private bool IsPluginEnabled(string name)

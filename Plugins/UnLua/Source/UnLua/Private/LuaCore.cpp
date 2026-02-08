@@ -23,21 +23,7 @@
 #include "ReflectionUtils/FieldDesc.h"
 #include "ReflectionUtils/PropertyDesc.h"
 
-#ifdef __cplusplus
-#if !LUA_COMPILE_AS_CPP
-extern "C" {
-#endif
-#endif
-
-#include "lfunc.h"
-#include "lstate.h"
-#include "lobject.h"
-
-#ifdef __cplusplus
-#if !LUA_COMPILE_AS_CPP
-}
-#endif
-#endif
+#include "LuaInternalHeaders.h"
 
 const FScriptContainerDesc FScriptContainerDesc::Array(sizeof(FLuaArray), "TArray");
 const FScriptContainerDesc FScriptContainerDesc::Set(sizeof(FLuaSet), "TSet");

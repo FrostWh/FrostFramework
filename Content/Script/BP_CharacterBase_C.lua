@@ -16,7 +16,7 @@ end
 function M:ReceiveBeginPlay()
 	local Weapon = self:SpawnWeapon()
 	if Weapon then
-		Weapon:K2_AttachToComponent(self.WeaponPoint, nil, UE.EAttachmentRule.SnapToTarget, UE.EAttachmentRule.SnapToTarget, UE.EAttachmentRule.SnapToTarget)
+		Weapon:K2_AttachToComponent(self.WeaponPoint, nil, UE.EAttachmentRule.SnapToTarget, UE.EAttachmentRule.SnapToTarget, UE.EAttachmentRule.SnapToTarget, true)
 		self.Weapon = Weapon
 	end
 end

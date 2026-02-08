@@ -12,22 +12,28 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
 // See the License for the specific language governing permissions and limitations under the License.
 
-using UnrealBuildTool;
-using System.Collections.Generic;
+#include "UnLuaPrivate.h"
+#include "lua.hpp"
 
-public class TPSProjectEditorTarget : TargetRules
+void UnLuaLogWithTraceback(lua_State* L, ELogVerbosity::Type Verbosity, const FString& LogMsg)
 {
-    public TPSProjectEditorTarget(TargetInfo Target) : base(Target)
+    luaL_traceback(L, L, "", 0);
+    FString FullMsg = LogMsg + UTF8_TO_TCHAR(lua_tostring(L, -1));
+    lua_pop(L, 1);
+    
+    switch (Verbosity)
     {
-        Type = TargetType.Editor;
-        DefaultBuildSettings = BuildSettingsVersion.Latest;
-        IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
-        bOverrideBuildEnvironment = true;
-        ExtraModuleNames.AddRange(
-            new string[]
-            {
-                "TPSProject"
-            }
-            );
+    case ELogVerbosity::Log:
+        UE_LOG(LogUnLua, Log, TEXT("%s"), *FullMsg);
+        break;
+    case ELogVerbosity::Warning:
+        UE_LOG(LogUnLua, Warning, TEXT("%s"), *FullMsg);
+        break;
+    case ELogVerbosity::Error:
+        UE_LOG(LogUnLua, Error, TEXT("%s"), *FullMsg);
+        break;
+    default:
+        UE_LOG(LogUnLua, Log, TEXT("%s"), *FullMsg);
+        break;
     }
 }
